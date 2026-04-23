@@ -37,15 +37,35 @@ def detect_intent(state: AgentState):
 
 
 # ---- NODE 2: RAG ----
+import json
+
 def rag_node(state: AgentState):
+    user_input = state["user_input"].lower()
+
+    
+    if "pricing" in user_input:
+        with open("data.json") as f:
+            data = json.load(f)
+
+        pricing_text = ""
+
+        for name, details in data["pricing"].items():
+            pricing_text += (
+                f"{name.upper()}:\n"
+                f"- Price: {details['price']}\n"
+                f"- Features: {', '.join(details['features'])}\n\n"
+            )
+
+        return {"response": pricing_text.strip()}
+
+    # fallback to RAG
     context = retrieve(state["user_input"], vectorstore)
 
     prompt = f"""
     You are a strict assistant.
 
     ONLY answer from the provided context.
-    DO NOT make up information.
-    If answer is not in context, say "I don't know".
+    If not found, say "I don't know".
 
     Context:
     {context}
